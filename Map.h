@@ -1,49 +1,52 @@
-#pragma once
 #include <SFML/Graphics.hpp>
 #include <vector>
+#include "Player.h"
+#pragma once
 #ifndef MAP_H
 #define MAP_H
 
 class Map 
 {
 public:
-    Map(float windowWidth, float windowHeight);
+    Map();
 
     void draw(sf::RenderWindow& window);
 
     void drawPlatform(sf::RenderWindow& window, sf::RectangleShape& platform);
     
-    // funkce na platformy
-    sf::RectangleShape setPlatform(int width, int height, int x, int y, int position)
-    {                                                                
-        sf::RectangleShape platform(sf::Vector2f(width, height));
-        platform.setPosition(x, y);
-        if (position == 1)
-            platformsTop.push_back(platform);      // top platformy do vektoru
-        else
-            platformsBot.push_back(platform);      // bottom
+    sf::RectangleShape setPlatform(float width, float height, float x, float y);
 
-        return platform;
-    } 
+    sf::RectangleShape setFloor(float width, float height, float x, float y);
 
     void loadTextures();
 
-    sf::RectangleShape platform1a = setPlatform(100, 10, 800, 720, 1);        // PAK SMAZAT
-    sf::RectangleShape platform1b = setPlatform(100, 10, 800, 730, 2);        // PAK SMAZAT, BUDE JEN V .CPP ASI
+    void handleCollisions(Player& player);
 
-    sf::RectangleShape platform2a = setPlatform(100, 10, 1000, 620, 1);        // PAK SMAZAT
-    sf::RectangleShape platform2b = setPlatform(100, 10, 1000, 630, 2);        // PAK SMAZAT, BUDE JEN V .CPP ASI
-
-    sf::RectangleShape floor;                                                  // SVIJANSKÝ SMÁZ PAK
+    
 
 private:
 
+    bool move_right = false;
+    int floor1X = 2000;
+    int floor2X = 1400;
+    int floor3X = 1400;
+
+    int floor1Height = 900;
+    int floor2Height = 200;
+    int floor3Height = -500;
+
     sf::Texture floorTexture1;
-    sf::Sprite floor1;
+    sf::Texture floorTexture2;    
+    sf::Sprite stoneFloor1;
+    sf::Sprite stoneFloor2;
+
     sf::Texture backgroundTexture1;
     sf::Sprite background1;
+    sf::Texture backgroundTexture2;
+    sf::Sprite background2;
     sf::Texture platformTexture;
 
+    std::vector<sf::RectangleShape> floors;
     std::vector<sf::RectangleShape> platformsTop;
     std::vector<sf::RectangleShape> platformsBot;
 

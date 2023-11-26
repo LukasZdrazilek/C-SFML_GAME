@@ -1,29 +1,24 @@
 #include "Interface.h"
-#include <iostream>
 
 void Interface::loadTextures()
 {
 	hitpointTexture.loadFromFile("Textures/HP.png");
-}
-
-void Interface::drawFont(sf::RenderWindow& window)
-{
-	this->font = font;
+	//hitpointTexture.setSmooth(true);
 	font.loadFromFile("font.ttf");
-	hitpointText.setFont(font);
-	hitpointText.setCharacterSize(24);
-	hitpointText.setFillColor(sf::Color::White);
-	hitpointText.setPosition(10.0f, 10.0f);			// pozice textu	
+	moneyText.setFont(font);
+	moneyText.setCharacterSize(16);
+	moneyText.setFillColor(sf::Color::White);
 }
 
-void Interface::update(int hitpoints)
+void Interface::loadFont()
 {
-	hitpointText.setString("HP: " + std::to_string(hitpoints));
+	
 }
 
 void Interface::draw(sf::RenderWindow& window)
 {
-	//window.draw(hitpointText);	nejde zatim
+	window.draw(moneyText);
+
 	if (hitPoints == 3)
 	{
 		window.draw(hitPoint1);
@@ -37,14 +32,16 @@ void Interface::draw(sf::RenderWindow& window)
 	}
 	else
 		window.draw(hitPoint1);
-	//drawFont(window);
 }
 
-void Interface::updateHPPositions(Player player)
+void Interface::updatePositions(Player player)
 {
 	hitPoint1.setPosition({ (float)player.getX() - 340, (float)player.getY() - 160 });
 	hitPoint2.setPosition({ (float)player.getX() - 290, (float)player.getY() - 160 });
 	hitPoint3.setPosition({ (float)player.getX() - 240, (float)player.getY() - 160 });
+
+	moneyText.setString(std::to_string(money));
+	moneyText.setPosition({ (float)player.getX() - 333, (float)player.getY() - 115 });
 }
 
 void Interface::handleUI(sf::RenderWindow& window, Player player)
@@ -58,5 +55,5 @@ void Interface::handleUI(sf::RenderWindow& window, Player player)
 	hitPoint3.setTexture(hitpointTexture);
 	hitPoint2.setTexture(hitpointTexture);
        
-	updateHPPositions(player);
+	updatePositions(player);
 }

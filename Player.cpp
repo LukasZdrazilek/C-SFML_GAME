@@ -9,30 +9,50 @@ void Player::loadTextures()
     playerAttack_left.loadFromFile("Textures/Hornet/Hornet_attack1_left.png");
     playerFall_right.loadFromFile("Textures/Hornet/Hornet_fall_right.png");
     playerFall_left.loadFromFile("Textures/Hornet/Hornet_fall_left.png");
-    //playerJump_right.loadFromFile("Textures/Hornet/Hornet_jump_right.png"); // nejde
-    //playerJump_left.loadFromFile("Textures/Hornet/Hornet_jump_left.png");   // nejde
+    playerJump_right.loadFromFile("Textures/Hornet/Hornet_jump_right.png");
+    playerJump_left.loadFromFile("Textures/Hornet/Hornet_jump_left.png");
     playerRun1_right.loadFromFile("Textures/Hornet/Hornet_run1_right.png");
     playerRun1_left.loadFromFile("Textures/Hornet/Hornet_run1_left.png");
     playerAttackEffect_right.loadFromFile("Textures/Hornet/Attack_right.png");
     playerAttackEffect_left.loadFromFile("Textures/Hornet/Attack_left.png");
-    playerRun2_right.loadFromFile("Textures/Hornet/Hornet_run2_right.png");     // vymyslet
-    playerRun2_left.loadFromFile("Textures/Hornet/Hornet_run2_left.png");       // vymyslet
+    playerRun2_right.loadFromFile("Textures/Hornet/Hornet_run2_right.png");
+    playerRun2_left.loadFromFile("Textures/Hornet/Hornet_run2_left.png");  
 }
+
+sf::Clock attackCooldown;
+sf::Clock attackAnimationTime;
 
 void Player::handlePlayer(float deltaTime, float multiplier) 
 {
-
-    sf::RectangleShape attackHitbox(sf::Vector2f(playerWidth, playerHeight));
 
     if (facingLeft == false)
         player.setTexture(&playerTexture_right);
     else
         player.setTexture(&playerTexture_left);
-        
+       
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::X))
+    // Utok funkce
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::X) && !isAttacking && attackCooldown.getElapsedTime().asMilliseconds() > 600) 
     {
-        //attackAnimation = true;     // maybeee
+        isAttacking = true;
+        attackCooldown.restart();
+        attackAnimationTime.restart();
+
+        if (!facingLeft) 
+            attackHitbox.setPosition(player.getPosition().x + (player.getGlobalBounds().width), player.getPosition().y);
+
+        else 
+            attackHitbox.setPosition(player.getPosition().x - (player.getGlobalBounds().width), player.getPosition().y);
+    }
+    
+    // Zakaz spamu utoku
+    if (isAttacking && attackCooldown.getElapsedTime().asMilliseconds() > 200) 
+        isAttacking = false;
+
+
+    // Aktivace textur utoku
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::X)  && attackAnimationTime.getElapsedTime().asMilliseconds() < 200)
+    {
         if (facingLeft == false )
         {
             attackHitbox.setTexture(&playerAttackEffect_right);
@@ -42,17 +62,16 @@ void Player::handlePlayer(float deltaTime, float multiplier)
         {
             attackHitbox.setTexture(&playerAttackEffect_left);
             player.setTexture(&playerAttack_left);
-        }
-            
+        }      
     }
-        
 
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+    // Pohyb vlevo
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) 
+    {
         move({ -moveSpeed * deltaTime * multiplier, 0 });
         facingLeft = true;
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::X))
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::X) && attackAnimationTime.getElapsedTime().asMilliseconds() < 200)
         {
 
             if (facingLeft == false) 
@@ -61,7 +80,7 @@ void Player::handlePlayer(float deltaTime, float multiplier)
                 player.setTexture(&playerAttack_left);
         }
         else
-        {
+        {   // animace behani vlevo
             player.setTexture(&playerRun1_left);
             if (runTimer.getElapsedTime().asSeconds() > run_animationTime)
             {
@@ -73,16 +92,16 @@ void Player::handlePlayer(float deltaTime, float multiplier)
                 if (runTimer.getElapsedTime().asSeconds() > run_animationTime * 2)
                     runTimer.restart();
             }
-        }
-            
-            
+        } 
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+    // Pohyb vpravo
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) 
+    {
         move({ +moveSpeed * deltaTime * multiplier, 0 });
         facingLeft = false;
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::X))
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::X) && attackAnimationTime.getElapsedTime().asMilliseconds() < 200)
         {
             if (facingLeft == false)
                 player.setTexture(&playerAttack_right);
@@ -90,7 +109,7 @@ void Player::handlePlayer(float deltaTime, float multiplier)
                 player.setTexture(&playerAttack_left);
         }
         else
-        {
+        {   // animace behani vpravo
             player.setTexture(&playerRun1_right);
             if (runTimer.getElapsedTime().asSeconds() > run_animationTime)
             {
@@ -102,11 +121,10 @@ void Player::handlePlayer(float deltaTime, float multiplier)
                 if (runTimer.getElapsedTime().asSeconds() > run_animationTime * 2)
                     runTimer.restart();
             }
-        }
-            
+        }        
     }
 
-    //Gravitace
+    // Gravitace
     if (getY() + playerHeight < floorHeight && isJumping == false)      // pokud je hrac vys nez zeme + nedrzi mezernik
     {
         player.move({ 0, gravitySpeed * deltaTime * multiplier });
@@ -125,21 +143,17 @@ void Player::handlePlayer(float deltaTime, float multiplier)
             else
                 player.setTexture(&playerFall_left);
         }
-        
-        
     }
 
     // funkce pro "zapnuti" skoku
-    if (!isJumping)
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && jumpsLeft > 0)
     {
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && jumpsLeft > 0)   
+        if (isJumping == false)   
         {
             isJumping = true;
             jumpTimer.restart();
-            jumpsLeft = 0;
-            
+            jumpsLeft = 0; 
         }
-
     }
 
     // funkce na skok
@@ -159,18 +173,25 @@ void Player::handlePlayer(float deltaTime, float multiplier)
             else
             {
                 if (facingLeft == false)
-                    player.setTexture(&playerFall_right);   //
+                    player.setTexture(&playerJump_right);   //
                 else
-                    player.setTexture(&playerFall_left);    //
+                    player.setTexture(&playerJump_left);    //
             }
         }
         else
         {
             isJumping = false;
-            jumpsLeft = 0;
         }      
         
     }
+
+    // Bounds mapy zleva
+    if (getX() <= 0)
+        setPosition({ 0, (float)getY() });
+
+    // Bounds mapy zprava
+    if (getX() >= (2000 - playerWidth))
+        setPosition({ 2000 - (playerWidth), (float)getY()});
 
 
 }

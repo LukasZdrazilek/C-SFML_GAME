@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <iostream>
 #pragma once
 #ifndef PLAYER_H
 #define PLAYER_H
@@ -10,18 +11,17 @@ public:
 
 	Player()
 	{
-
-	}
-
-	Player(sf::Vector2f size)
-	{
-		player.setSize(size);
+		player.setSize({ 60, 70 });
+		attackHitbox.setSize(sf::Vector2f(playerWidth, playerHeight));
+		player.setPosition({ 100, 400 });	// fall in effect 
 	}
 
 	void drawPlayer(sf::RenderWindow& window)
 	{
 		window.draw(player);
 		window.draw(attackEffect);
+		if (isAttacking)
+			window.draw(attackHitbox);
 	}
 
 	void handlePlayer(float deltaTime, float multiplier);
@@ -38,12 +38,12 @@ public:
 
 	int getY()		// vrati souradnici vysky hrace (y) kvuli gravitaci
 	{
-		return player.getPosition().y;
+		return (int)player.getPosition().y;
 	}
 
 	int getX()
 	{
-		return player.getPosition().x;
+		return (int)player.getPosition().x;
 	}
 
 	sf::Vector2f getPosition()
@@ -69,11 +69,14 @@ public:
 	bool facingLeft = false;	//THIS
 	float playerHeight = 70;	//
 	float playerWidth = 60;
+	bool wasAttackPressed = false;
 	bool isAttacking = false;
 
 	float moveSpeed = 5;
-	int floorHeight = 900;
+	float floorHeight = 900;
 	float gravitySpeed = 9;
+	bool moving_left = false;
+	bool moving_right = false;
 
 	float jumpSpeed = 7;
 	int jumpsLeft = 1;
@@ -83,6 +86,7 @@ public:
 	sf::Clock runTimer;
 	sf::Clock attackAnimationTimer;
 
+	sf::RectangleShape attackHitbox;
 
 private:
 
