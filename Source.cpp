@@ -1,90 +1,129 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <iostream>
 #include "Player.h"
 #include "Enemy.h"
+#include "Boss.h"
 #include "Map.h"
 #include "Interface.h"
+#include "Camera.h"
+#include "Menu.h"
 
-int main()
+enum class GameState 
 {
-    sf::RenderWindow window(sf::VideoMode(1280, 720), "My Videogame");
-    window.setFramerateLimit(60);   // nemusi asi
+    MENU,
+    GAMEPLAY
+};
+
+int main() 
+{
+    // Okno hry a FPS limit ( zde neni nutne potreba )
+    sf::RenderWindow window(sf::VideoMode(1280, 720), "Song of the Knights of Silk");
+    window.setFramerateLimit(60);
 
     Map map;
+    Boss boss;
+    Enemy enemy({1,1},{1,1},1);
+    Enemies enemies;
     Player player;
+    sf::View camera;
     Enemies allEnemies;
     Interface interface;
-
-    // Clock promenne
-    sf::Clock clock;
-    sf::Clock attackTimer;      // pak vymazat aimplementovat do Player.cpp
-    float deltaTime;
-    float multiplier = 70.0f;   // kvuli delta timu ( framerate independency )
-
-    // UI promenne
     sf::Texture hitpointTexture;
-    
 
-    // Kamera setup
-    sf::View camera(sf::Vector2f(player.getPosition().x + player.playerWidth / 2, player.getPosition().y + player.playerHeight / 2), sf::Vector2f(1280, 720));
-    camera.setSize(sf::Vector2f(800, 450));
-    window.setView(camera);
-
+    // 'Real time' hodiny, casovac utoku, delta time + multiplier proti zavislosti hre na FPS
+    sf::Clock clock;
+    sf::Clock attackTimer;
+    float deltaTime;
+    float multiplier = 70.0f;
 
     // Nacitani textur
     player.loadTextures();
+    boss.loadTextures();
     map.loadTextures();
     interface.loadTextures();
+    //enemy.loadSound();
     allEnemies.loadTextures();
 
-    
-    // Main game loop ( hra je otevrena )
+    GameState gameState = GameState::MENU;
+    Menu mainMenu((float)window.getSize().x, (float)window.getSize().y);
+
     while (window.isOpen())
     {
         sf::Event event;
         deltaTime = clock.restart().asSeconds();
 
-        // Kamera sledovani
-        camera.setCenter(player.getPosition().x + player.playerWidth / 2, player.getPosition().y + player.playerHeight / 2 - 20 );
-        window.setView(camera);
-        
-        
-        // Aktivace .h a .cpp souboru
-        interface.handleUI(window, player);
-        allEnemies.handleEnemies(player, window, interface, player.attackHitbox);
-        player.handlePlayer(deltaTime, multiplier);
-        map.handleCollisions(player);
-
-        //std::cout << "deltaTime: " << deltaTime << "\n";
-
-
-        while (window.pollEvent(event))         // sem psat eventy  ->  sf::Event:: ... edit  radsi ne kvuli pameti
+        if (gameState == GameState::MENU) 
         {
-            switch (event.type)
+            while (window.pollEvent(event))
             {
-            case sf::Event::Closed:
-                window.close();
-
-            case sf::Event::KeyReleased:
-                if (event.key.code == sf::Keyboard::Space)
-                    player.isJumping = false;
-
-                if (event.key.code == sf::Keyboard::X)
-                    player.isAttacking = false;
-                if (event.key.code == sf::Keyboard::Escape)
+                if (event.type == sf::Event::Closed)
                     window.close();
+
+                mainMenu.handleEvents(window, event);
+
+                if (mainMenu.startGame == true)
+                {
+                    gameState = GameState::GAMEPLAY;
+                }
+                else if (mainMenu.bossRush == true)
+                {
+                    gameState = GameState::GAMEPLAY;
+                    player.setPosition({ 700, -800 });
+                }
+                else if (mainMenu.exitGame == true)
+                {
+                    window.close();
+                }
             }
+
+            window.clear();
+            mainMenu.draw(window);
+            window.display();
         }
+        else if (gameState == GameState::GAMEPLAY) 
+        {
+            if (interface.isPlayerAlive(player) == false)
+            {
+                interface.playerReset(player);
+                enemies.resetEnemies();
+            }
 
-        // Kresleni prvku hry
-        map.draw(window);
-        interface.draw(window);
-        player.drawPlayer(window);
-        allEnemies.drawEnemies(window);
+            handleCamera(camera, player, window);
+            interface.handleUI(window, player);
+            if (mainMenu.bossRush == false)
+                allEnemies.handleEnemies(deltaTime, player, window, interface, player.attackHitbox);
+            player.handlePlayer(deltaTime, multiplier);
+            map.handleCollisions(player);
+            boss.handleBoss(player, window, interface, player.attackHitbox, deltaTime, multiplier);
 
-        window.display();
+            while (window.pollEvent(event)) 
+            {
+                switch (event.type)
+                {
+                case sf::Event::Closed:
+                    window.close();
 
+                case sf::Event::KeyReleased:
+                    if (event.key.code == sf::Keyboard::Space)
+                        player.isJumping = false;
+
+                    if (event.key.code == sf::Keyboard::X)
+                        player.isAttacking = false;
+
+                    if (event.key.code == sf::Keyboard::Escape)
+                        window.close();
+                }
+            }
+
+            window.clear();
+            map.draw(window, player, deltaTime, multiplier);
+            boss.drawBoss(window, interface, player);
+            interface.draw(window);
+            player.drawPlayer(window);
+            allEnemies.drawEnemies(window);
+            window.display();
+        }
     }
-
     return 0;
 }

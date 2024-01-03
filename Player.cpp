@@ -17,11 +17,10 @@ void Player::loadTextures()
     playerAttackEffect_left.loadFromFile("Textures/Hornet/Attack_left.png");
     playerRun2_right.loadFromFile("Textures/Hornet/Hornet_run2_right.png");
     playerRun2_left.loadFromFile("Textures/Hornet/Hornet_run2_left.png");  
+    playerHealing.loadFromFile("Textures/Hornet/Hornet_healing.png");
 }
 
-sf::Clock attackCooldown;
-sf::Clock attackAnimationTime;
-
+// Funkce hrace
 void Player::handlePlayer(float deltaTime, float multiplier) 
 {
 
@@ -63,6 +62,19 @@ void Player::handlePlayer(float deltaTime, float multiplier)
             attackHitbox.setTexture(&playerAttackEffect_left);
             player.setTexture(&playerAttack_left);
         }      
+    }
+
+    // Jump boost powerup - Drzte skok pri drzeni LShiftu pro vetsi skok
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) && isJumping && (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right)))
+    {
+        jumpBoostTimer.restart();
+        if (jumpBoostTimer.getElapsedTime().asSeconds() < 1.0)
+        {
+            if (facingLeft == false)
+                player.move({ 4 * deltaTime * multiplier, 0 });
+            else
+                player.move({ -4 * deltaTime * multiplier, 0 });
+        }
     }
 
     // Pohyb vlevo
@@ -124,6 +136,12 @@ void Player::handlePlayer(float deltaTime, float multiplier)
         }        
     }
 
+    // Aktivace textur healovani
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::C) && !isJumping && !(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right)))
+    {
+        player.setTexture(&playerHealing);
+    }
+
     // Gravitace
     if (getY() + playerHeight < floorHeight && isJumping == false)      // pokud je hrac vys nez zeme + nedrzi mezernik
     {
@@ -173,16 +191,15 @@ void Player::handlePlayer(float deltaTime, float multiplier)
             else
             {
                 if (facingLeft == false)
-                    player.setTexture(&playerJump_right);   //
+                    player.setTexture(&playerJump_right);
                 else
-                    player.setTexture(&playerJump_left);    //
+                    player.setTexture(&playerJump_left);
             }
         }
         else
         {
             isJumping = false;
-        }      
-        
+        }
     }
 
     // Bounds mapy zleva
@@ -190,8 +207,6 @@ void Player::handlePlayer(float deltaTime, float multiplier)
         setPosition({ 0, (float)getY() });
 
     // Bounds mapy zprava
-    if (getX() >= (2000 - playerWidth))
-        setPosition({ 2000 - (playerWidth), (float)getY()});
-
-
+    if (getX() >= (2500 - playerWidth))
+        setPosition({ 2500 - (playerWidth), (float)getY()});
 }

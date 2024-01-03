@@ -6,14 +6,13 @@
 
 class Player
 {
-
 public:
 
 	Player()
 	{
 		player.setSize({ 60, 70 });
 		attackHitbox.setSize(sf::Vector2f(playerWidth, playerHeight));
-		player.setPosition({ 100, 400 });	// fall in effect 
+		player.setPosition({ 100, 400 });
 	}
 
 	void drawPlayer(sf::RenderWindow& window)
@@ -36,14 +35,14 @@ public:
 		player.setPosition(newPos);
 	}
 
-	int getY()		// vrati souradnici vysky hrace (y) kvuli gravitaci
+	float getY()
 	{
-		return (int)player.getPosition().y;
+		return player.getPosition().y;
 	}
 
-	int getX()
+	float getX()
 	{
-		return (int)player.getPosition().x;
+		return player.getPosition().x;
 	}
 
 	sf::Vector2f getPosition()
@@ -65,9 +64,9 @@ public:
 
 	void loadTextures();
 
-
-	bool facingLeft = false;	//THIS
-	float playerHeight = 70;	//
+	// Booly a nastaveni velikosti spritu hrace
+	bool facingLeft = false;
+	float playerHeight = 70;
 	float playerWidth = 60;
 	bool wasAttackPressed = false;
 	bool isAttacking = false;
@@ -82,20 +81,30 @@ public:
 	int jumpsLeft = 1;
 	bool isJumping = false;
 
+	bool enterBossfight = false;
+
+	// Casovac skoku, animace behu, jump boostu, 2x casovac proti 'spamu' utoku a cooldown utoku
 	sf::Clock jumpTimer;
 	sf::Clock runTimer;
+	sf::Clock jumpBoostTimer;
 	sf::Clock attackAnimationTimer;
+	sf::Clock attackAnimationTime;
+	sf::Clock attackCooldown;
 
+	// Sprite attack hitboxu
 	sf::RectangleShape attackHitbox;
 
 private:
 
+	// Sprite hrace a jeho attack effectu
 	sf::RectangleShape player;
 	sf::RectangleShape attackEffect;
 
+	// Casovac animace behu a bool attack animace
 	float run_animationTime = 0.3f;
 	bool attackAnimation = false;
 
+	// Textury hrace a jeho utoku, leceni
 	sf::Texture playerTexture_right;
 	sf::Texture playerTexture_left;
 	sf::Texture playerAttack_right;
@@ -110,6 +119,7 @@ private:
 	sf::Texture playerRun2_right;
 	sf::Texture playerAttackEffect_right;
 	sf::Texture playerAttackEffect_left;
+	sf::Texture playerHealing;
 
 };
 
