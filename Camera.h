@@ -17,7 +17,8 @@ void handleCamera(sf::View& camera, Player& player, sf::RenderWindow& window)
         camera.setSize(sf::Vector2f(950, 550));
         camera.setCenter(player.getPosition().x + player.playerWidth / 2, -650);
         window.setView(camera);
-        player.enterBossfight = true;
+        if (player.getX() >= 1200)
+            player.enterBossfight = true;
     }
 }
 

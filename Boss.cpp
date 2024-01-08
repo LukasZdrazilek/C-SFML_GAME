@@ -13,6 +13,7 @@ void Boss::loadTextures()
 	boss_attack1_charge_left.loadFromFile("Textures/Boss/Boss_attack1_charge_left.png");
 	boss_attack2_wave_right.loadFromFile("Textures/Boss/Boss_attack2_wave_right.png");
 	boss_attack2_wave_left.loadFromFile("Textures/Boss/Boss_attack2_wave_left.png");
+	boss_downed.loadFromFile("Textures/Boss/Boss_downed.png");
 	boss_death.loadFromFile("Textures/Boss/Boss_death.png");
 
 	attackWave.setTexture(boss_attack2_wave_left);
@@ -20,19 +21,19 @@ void Boss::loadTextures()
 }
 
 // Logika bosse
-void Boss::handleBoss(Player& player, sf::RenderWindow& window, Interface& interface, sf::RectangleShape attackHitbox, float& deltaTime, float& multiplier)
+void Boss::handleBoss(Player& player, sf::RenderWindow& window, Interface& interface, sf::RectangleShape attackHitbox, float& deltaTime, float& multiplier, sf::Sound& playerHitSound)
 {
 	if (player.enterBossfight == true)
 	{
 		boss.setTexture(&boss_left);
-		handlePlayerCollision(player, interface, window);
+		handlePlayerCollision(player, interface, window, playerHitSound);
 		handlePlayerAttackCollision(player, interface, window, attackHitbox);
 		handleTimedAttacks(player, interface, deltaTime, multiplier);
-		handlePlayerWaveAttackCollision(player, interface, window, attackWave);
+		handlePlayerWaveAttackCollision(player, interface, window, attackWave, playerHitSound);
 	}	
 }
 
-// Korekce bossova hitboxu pro ruzne textury ( ne moc dobre reseni )
+// Korekce bossova hitboxu pro ruzne textury  !!
  sf::FloatRect Boss::getBounds()
 {
 	if (boss.getTexture() == &boss_left)				  return getGlobalBounds1();
@@ -58,22 +59,23 @@ bool Boss::checkPlayerWaveAttackCollision(Player& player, sf::Sprite attackWave)
 	return attackWave.getGlobalBounds().intersects((player.getGlobalBounds()));
 }
 
-// Logika utoku bosse na hrace
-void Boss::handlePlayerCollision(Player& player, Interface& interface, sf::RenderWindow& window)
+// Nepritel utoci na hrace, hrac zapne ochranu ( aka blikani po hitu akorat bez blikani ! ), zmeni se mu HP o 1 a zapne zvuk hitu 
+void Boss::handlePlayerCollision(Player& player, Interface& interface, sf::RenderWindow& window, sf::Sound& playerHitSound)
 {
 	if (checkPlayerCollision(player) && isAlive(interface) == true && playerHitCooldown.getElapsedTime().asSeconds() > hit_cooldown)
 	{
 		playerHitCooldown.restart();
 		interface.hitPoints--;
+		playerHitSound.play();
 
 		if (player.facingLeft == false)
-			player.move({ -80, -20 });        // enemy bump
+			player.move({ -80, -20 });
 		else
 			player.move({ +80, -20 });
 	}
 }
 
-// Logika utoku hrace na bosse
+// Pokud utok hrace zasahne nepritele a ten je nazivu, enemy se posune po smeru utoku, zmeni se mu HP o 1 a zapne se zvuk hitu a hraci se navysi bar healing pointu
 void Boss::handlePlayerAttackCollision(Player& player, Interface& interface, sf::RenderWindow& window, sf::RectangleShape attackHitbox)
 {
 	if (player.isAttacking)
@@ -87,12 +89,14 @@ void Boss::handlePlayerAttackCollision(Player& player, Interface& interface, sf:
 	}
 }
 
-void Boss::handlePlayerWaveAttackCollision(Player& player, Interface& interface, sf::RenderWindow& window, sf::Sprite attackWave)
+// Stejne jako kolize hrace a bosse, akorat zde je to kolize hrace a wave utoku bosse
+void Boss::handlePlayerWaveAttackCollision(Player& player, Interface& interface, sf::RenderWindow& window, sf::Sprite attackWave, sf::Sound& playerHitSound)
 {
 	if (checkPlayerWaveAttackCollision(player, attackWave) && attackWaveDraw == true && isAlive(interface) == true && playerHitCooldown.getElapsedTime().asSeconds() > hit_cooldown)
 	{
 		playerHitCooldown.restart();
 		interface.hitPoints--;
+		playerHitSound.play();
 
 		if (player.facingLeft == false)
 			player.move({ -80, -20 });
@@ -136,7 +140,7 @@ void Boss::handleTimedAttacks(Player& player, Interface& interface, float& delta
 	if (interface.bossHitPoints > 0)
 	{
 		// Timer celeho setu utoku
-		if (attacksTimer.getElapsedTime().asSeconds() < 25.1)
+		if (attacksTimer.getElapsedTime().asSeconds() < 33.2)
 		{
 
 			if (attacksTimer.getElapsedTime().asSeconds() > 4 && attacksTimer.getElapsedTime().asSeconds() <= 6)
@@ -314,6 +318,36 @@ void Boss::handleTimedAttacks(Player& player, Interface& interface, float& delta
 				attackWave.move({ -12 * deltaTime * multiplier, 0 });
 			}
 
+			else if (attacksTimer.getElapsedTime().asSeconds() > 25 && attacksTimer.getElapsedTime().asSeconds() <= 27)
+			{
+				boss.setTexture(&boss_attack1_charge_left);
+			}
+
+			else if (attacksTimer.getElapsedTime().asSeconds() > 27 && attacksTimer.getElapsedTime().asSeconds() < 27.1)
+			{
+				move({ -70 * deltaTime * multiplier, 0 });
+			}
+
+			else if (attacksTimer.getElapsedTime().asSeconds() > 27.1 && attacksTimer.getElapsedTime().asSeconds() <= 29.1)
+			{
+				boss.setTexture(&boss_attack1_left);
+			}
+
+			else if (attacksTimer.getElapsedTime().asSeconds() > 29.1 && attacksTimer.getElapsedTime().asSeconds() <= 31.1)
+			{
+				boss.setTexture(&boss_attack1_charge_right);
+			}
+
+			else if (attacksTimer.getElapsedTime().asSeconds() > 31.1 && attacksTimer.getElapsedTime().asSeconds() < 31.2)
+			{
+				move({ 70 * deltaTime * multiplier, 0 });
+			}
+
+			else if (attacksTimer.getElapsedTime().asSeconds() > 31.2 && attacksTimer.getElapsedTime().asSeconds() <= 33.2)
+			{
+				boss.setTexture(&boss_attack1_right);
+			}
+
 		}
 		// Restart cyklu, vraceni vlnoveho utoku na pocatecni pozici
 		else
@@ -324,9 +358,18 @@ void Boss::handleTimedAttacks(Player& player, Interface& interface, float& delta
 		}
 			
 	}
-	// Smrt bosse
+	// Smrt bosse, zapne se timer pro zmenu textur
 	else
 	{
-		boss.setTexture(&boss_death);
+		if (startDeathTimer == false)
+		{
+			deathTimer.restart();
+			startDeathTimer = true;
+		}
+
+		boss.setTexture(&boss_downed);
+
+		if (deathTimer.getElapsedTime().asSeconds() > 9)
+			boss.setTexture(&boss_death);
 	}
 }

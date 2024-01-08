@@ -20,36 +20,42 @@ void Player::loadTextures()
     playerHealing.loadFromFile("Textures/Hornet/Hornet_healing.png");
 }
 
-// Funkce hrace
-void Player::handlePlayer(float deltaTime, float multiplier) 
+// Logika hrace
+void Player::handlePlayer(float deltaTime, float multiplier, sf::Sound& attackSound) 
 {
-
+    // Idle textury hrace kdyz se nehybe
     if (facingLeft == false)
         player.setTexture(&playerTexture_right);
     else
         player.setTexture(&playerTexture_left);
        
 
-    // Utok funkce
+    // Utok na nepritele
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::X) && !isAttacking && attackCooldown.getElapsedTime().asMilliseconds() > 600) 
     {
         isAttacking = true;
         attackCooldown.restart();
         attackAnimationTime.restart();
+        attackSound.play();
 
+        // Textury spritu utoku podle pozice hrace
         if (!facingLeft) 
             attackHitbox.setPosition(player.getPosition().x + (player.getGlobalBounds().width), player.getPosition().y);
 
         else 
             attackHitbox.setPosition(player.getPosition().x - (player.getGlobalBounds().width), player.getPosition().y);
     }
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::X) == false)
+    {
+        isAttacking = false;
+    }
     
-    // Zakaz spamu utoku
+    // Zakaz spamovani utoku
     if (isAttacking && attackCooldown.getElapsedTime().asMilliseconds() > 200) 
         isAttacking = false;
 
-
-    // Aktivace textur utoku
+    // Aktivace textur utoku a textur utociciho hrace
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::X)  && attackAnimationTime.getElapsedTime().asMilliseconds() < 200)
     {
         if (facingLeft == false )
@@ -64,7 +70,7 @@ void Player::handlePlayer(float deltaTime, float multiplier)
         }      
     }
 
-    // Jump boost powerup - Drzte skok pri drzeni LShiftu pro vetsi skok
+    // Jump boost powerup - Drzte skok pri drzeni LShiftu pro vetsi skok 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) && isJumping && (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right)))
     {
         jumpBoostTimer.restart();
@@ -83,6 +89,7 @@ void Player::handlePlayer(float deltaTime, float multiplier)
         move({ -moveSpeed * deltaTime * multiplier, 0 });
         facingLeft = true;
 
+        // Nastaveni textur utociciho hrace pri pohybu vlevo
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::X) && attackAnimationTime.getElapsedTime().asMilliseconds() < 200)
         {
 
@@ -92,7 +99,7 @@ void Player::handlePlayer(float deltaTime, float multiplier)
                 player.setTexture(&playerAttack_left);
         }
         else
-        {   // animace behani vlevo
+        {   // Animace behani vlevo ( zmena dvou textur po case )
             player.setTexture(&playerRun1_left);
             if (runTimer.getElapsedTime().asSeconds() > run_animationTime)
             {
@@ -103,6 +110,8 @@ void Player::handlePlayer(float deltaTime, float multiplier)
 
                 if (runTimer.getElapsedTime().asSeconds() > run_animationTime * 2)
                     runTimer.restart();
+                
+
             }
         } 
     }
@@ -113,6 +122,7 @@ void Player::handlePlayer(float deltaTime, float multiplier)
         move({ +moveSpeed * deltaTime * multiplier, 0 });
         facingLeft = false;
 
+        // Nastaveni textur utociciho hrace pri pohybu vpravo
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::X) && attackAnimationTime.getElapsedTime().asMilliseconds() < 200)
         {
             if (facingLeft == false)
@@ -121,7 +131,7 @@ void Player::handlePlayer(float deltaTime, float multiplier)
                 player.setTexture(&playerAttack_left);
         }
         else
-        {   // animace behani vpravo
+        {   // Animace behani vpravo ( zmena dvou textur po case )
             player.setTexture(&playerRun1_right);
             if (runTimer.getElapsedTime().asSeconds() > run_animationTime)
             {
@@ -142,8 +152,8 @@ void Player::handlePlayer(float deltaTime, float multiplier)
         player.setTexture(&playerHealing);
     }
 
-    // Gravitace
-    if (getY() + playerHeight < floorHeight && isJumping == false)      // pokud je hrac vys nez zeme + nedrzi mezernik
+    // Gravitace - pokud je hrac vys nez zeme + nedrzi mezernik     !!
+    if (getY() + playerHeight < floorHeight && isJumping == false)
     {
         player.move({ 0, gravitySpeed * deltaTime * multiplier });
 
@@ -163,7 +173,7 @@ void Player::handlePlayer(float deltaTime, float multiplier)
         }
     }
 
-    // funkce pro "zapnuti" skoku
+    // funkce pro "zapnuti" skoku, zapne se casovac a zakaze skok znovu
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && jumpsLeft > 0)
     {
         if (isJumping == false)   
@@ -174,11 +184,11 @@ void Player::handlePlayer(float deltaTime, float multiplier)
         }
     }
 
-    // funkce na skok
+    // Funkce na skok
     if (isJumping)
     {
         float jumpTime = jumpTimer.getElapsedTime().asSeconds();
-        if (jumpTime < 0.4)        // max vyska skoku
+        if (jumpTime < 0.4)        // Max vyska skoku
         {
             player.move({ 0, -jumpSpeed * deltaTime * multiplier });
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::X))
@@ -200,6 +210,11 @@ void Player::handlePlayer(float deltaTime, float multiplier)
         {
             isJumping = false;
         }
+    }
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) == false)
+    {
+        isJumping = false;
     }
 
     // Bounds mapy zleva

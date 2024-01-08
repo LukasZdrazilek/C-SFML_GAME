@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <iostream>
 #pragma once
 #ifndef PLAYER_H
@@ -8,6 +9,7 @@ class Player
 {
 public:
 
+	// Inicializace hrace
 	Player()
 	{
 		player.setSize({ 60, 70 });
@@ -15,6 +17,7 @@ public:
 		player.setPosition({ 100, 400 });
 	}
 
+	// Kresleni hrace
 	void drawPlayer(sf::RenderWindow& window)
 	{
 		window.draw(player);
@@ -23,7 +26,10 @@ public:
 			window.draw(attackHitbox);
 	}
 
-	void handlePlayer(float deltaTime, float multiplier);
+	// Pouziti logiky hrace
+	void handlePlayer(float deltaTime, float multiplier, sf::Sound& attackSound);
+
+	// Jednoduche funkce se pro prehlednost nachazi v hlavickovem .h souboru
 
 	void move(sf::Vector2f distance)
 	{

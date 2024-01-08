@@ -16,32 +16,32 @@ void Enemies::loadTextures()
 }
 
 // Inicializace nepritele
-// Typ nepritele 1/0, 0 = Crawlid ( pozemni ), 1 = Mosqit ( letajici )
+// Typ nepritele: 0 = Crawlid ( pozemni ), 1 = Mosqit ( letajici )
 Enemy::Enemy(sf::Vector2f size, sf::Vector2f position, int type)
 {
     enemy.setSize(size);
     enemy.setPosition(position);
 }
 
-// Logika nepritele
+// Logika nepritele     ! - nepritele 2 beru podle jeho velikosti, coz v podstate jde a nemelo by to nikdy delat problem ale je to divny
 void Enemy::handleEnemy(float deltaTime, Player& player, sf::RenderWindow& window, const sf::Texture& leftTexture1, const sf::Texture& rightTexture1, const sf::Texture& leftTexture2, 
     const sf::Texture& rightTexture2, const sf::Texture& leftTexture3, const sf::Texture& rightTexture3, const sf::Texture& leftTexture4, const sf::Texture& rightTexture4)
 {
+    // Nepritel zije, pouziti logiky
     if (isAlive() == true)
     {
         movementTimer += deltaTime;
         flyingTimer += deltaTime;
 
-
+        // Zmena smeru pohybu nepritele
         if (movementTimer >= movementDuration)
         {
-            // Zmena smeru nepritele
             movingLeft = !movingLeft;
             movementTimer = 0;
         }
 
         // Casovani pohybu letajiciho nepritele
-        if (flyingTimer >= flyingDuration && enemy.getSize() == sf::Vector2f(40, 40))
+        if (flyingTimer >= flyingDuration && enemy.getSize() == sf::Vector2f(40, 40))   // !
         {
             movingUp = !movingUp;
             flyingTimer = 0;
@@ -64,13 +64,15 @@ void Enemy::handleEnemy(float deltaTime, Player& player, sf::RenderWindow& windo
         if (movingLeft)
         {
             move({ -speed * deltaTime * multiplier, 0 });
-            if (enemy.getSize() == sf::Vector2f(40, 40))
+            if (enemy.getSize() == sf::Vector2f(40, 40)) // !
                 enemy.setTexture(&leftTexture3);
             else
                 enemy.setTexture(&leftTexture1);
+
+            // Casovac na zmenu textury ( animace )
             if (runTimer.getElapsedTime().asSeconds() > run_animationTime)
             {
-                if (enemy.getSize() == sf::Vector2f(40, 40))
+                if (enemy.getSize() == sf::Vector2f(40, 40)) // !
                 {
                     if (enemy.getTexture() == &leftTexture3)
                         enemy.setTexture(&leftTexture4);
@@ -94,13 +96,13 @@ void Enemy::handleEnemy(float deltaTime, Player& player, sf::RenderWindow& windo
         if (!movingLeft)
         {
             move({ speed * deltaTime * multiplier, 0 });
-            if (enemy.getSize() == sf::Vector2f(40, 40))
+            if (enemy.getSize() == sf::Vector2f(40, 40)) // !
                 enemy.setTexture(&rightTexture3);
             else
                 enemy.setTexture(&rightTexture1);
             if (runTimer.getElapsedTime().asSeconds() > run_animationTime)
             {
-                if (enemy.getSize() == sf::Vector2f(40, 40))
+                if (enemy.getSize() == sf::Vector2f(40, 40)) // !
                 {
                     if (enemy.getTexture() == &rightTexture3)
                         enemy.setTexture(&rightTexture4);
@@ -122,12 +124,12 @@ void Enemy::handleEnemy(float deltaTime, Player& player, sf::RenderWindow& windo
         }
 
         // Letajici nepritel detekuje hrace pod nim
-        if (player.getY() <= getY() - 50 && enemy.getSize() == sf::Vector2f(40, 40))
+        if (player.getY() <= getY() - 50 && enemy.getSize() == sf::Vector2f(40, 40))    // !
         {
             movingUp = false;
         }
         // Letajici nepritel detekuje hrace nad nim
-        if (player.getY() >= getY() + 50 && enemy.getSize() == sf::Vector2f(40, 40))
+        if (player.getY() >= getY() + 50 && enemy.getSize() == sf::Vector2f(40, 40))    // !
         {
             movingUp = true;
         }
@@ -136,7 +138,7 @@ void Enemy::handleEnemy(float deltaTime, Player& player, sf::RenderWindow& windo
         {
             movingLeft = true;
         }
-        // Detekce hrace vpravo
+        // Detekce hrace vpravo ( hrac je blize jak 300 pixelu  )
         if (player.getX() <= getX() + 300 && player.getX() >= getX() && player.getY() <= getY())
         {
             movingLeft = false;
@@ -150,22 +152,23 @@ bool Enemy::checkPlayerCollision(Player& player)
     return getGlobalBounds().intersects(player.getGlobalBounds());
 }
 
-// Kontrola utoku hrace a nepritele
+// Kontrola utoku hrace na nepritele
 bool Enemy::checkPlayerAttackCollision(Player& player, sf::RectangleShape attackHitbox)
 {
     return getGlobalBounds().intersects(attackHitbox.getGlobalBounds());
 }
 
 // Logika utoku nepritele na hrace
-void Enemy::handlePlayerCollision(Player& player, Interface& interface, sf::RenderWindow& window)
+void Enemy::handlePlayerCollision(Player& player, Interface& interface, sf::RenderWindow& window, sf::Sound& playerHitSound)
 {
-
+    // Nepritel utoci na hrace, hrac zapne ochranu ( aka blikani po hitu akorat bez blikani ! ), zmeni se mu HP o 1 a zapne zvuk hitu 
     if (checkPlayerCollision(player) && isAlive() == true && playerHitCooldown.getElapsedTime().asSeconds() > hit_cooldown)
     {
         playerHitCooldown.restart();
         interface.hitPoints--;
-        //hitSound.play();
+        playerHitSound.play();
 
+        // hrac se posune po smeru hitu a trochu nahoru
         if (player.facingLeft == false)
             player.move({ -80, -20 });
         else
@@ -174,10 +177,11 @@ void Enemy::handlePlayerCollision(Player& player, Interface& interface, sf::Rend
 }
 
 // Logika utoku hrace na nepritele
-void Enemy::handlePlayerAttackCollision(Player& player, Interface& interface, sf::RenderWindow& window, sf::RectangleShape attackHitbox)
+void Enemy::handlePlayerAttackCollision(Player& player, Interface& interface, sf::RenderWindow& window, sf::RectangleShape attackHitbox, sf::Sound& enemyHitSound)
 {
     if (player.isAttacking)
-    {
+    {   
+        // Pokud utok hrace zasahne nepritele a ten je nazivu, enemy se posune po smeru utoku, zmeni se mu HP o 1, zapne se zvuk hitu a hraci se navysi bar healing pointu
         if (checkPlayerAttackCollision(player, attackHitbox) && isAlive() == true)
         {
             if (player.facingLeft == false)
@@ -185,7 +189,7 @@ void Enemy::handlePlayerAttackCollision(Player& player, Interface& interface, sf
             else
                 enemy.move({ -60, 0 });
             takeDamage(1);
-            //hitSound.play();
+            enemyHitSound.play();
             if (interface.healingPoints < interface.maxHealingPoints)
                 interface.healingPoints += 10;
         }
@@ -204,13 +208,13 @@ Enemies::Enemies()
 }
 
 // Funkce na nepratele
-void Enemies::handleEnemies(float deltaTime, Player& player, sf::RenderWindow& window, Interface& interface, sf::RectangleShape attackHitbox)
+void Enemies::handleEnemies(float deltaTime, Player& player, sf::RenderWindow& window, Interface& interface, sf::RectangleShape attackHitbox, sf::Sound& enemyHitSound, sf::Sound& playerHitSound)
 {
     for (auto& enemy : enemies)
     {
         enemy.handleEnemy(deltaTime, player, window, crawlid1_left, crawlid1_right, crawlid2_left, crawlid2_right, vengefly1_left, vengefly1_right, vengefly2_left, vengefly2_right);
-        enemy.handlePlayerCollision(player, interface, window);
-        enemy.handlePlayerAttackCollision(player, interface, window, attackHitbox);
+        enemy.handlePlayerCollision(player, interface, window, playerHitSound);
+        enemy.handlePlayerAttackCollision(player, interface, window, attackHitbox, enemyHitSound);
     }
 }
 
@@ -224,12 +228,11 @@ void Enemies::drawEnemies(sf::RenderWindow& window)
     }
 }
 
+// Reset nepratel pokud hrac zemre mimo boss arenu
 void Enemies::resetEnemies()
 {
     for (auto& enemy : enemies)
     {
-        std::cout << "Enemy hit points before reset: " << enemy.hitPoints << std::endl;
-        enemy.hitPoints = 3; // Reset hit points to default value
-        std::cout << "Enemies resetted: " << enemy.hitPoints << std::endl;
+        enemy.hitPoints = 3;
     }
 }

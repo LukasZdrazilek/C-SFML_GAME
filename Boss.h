@@ -17,7 +17,7 @@ public:
 
 	void loadTextures();
 
-	void handleBoss(Player& player, sf::RenderWindow& window, Interface& interface, sf::RectangleShape attackHitbox, float& deltaTime, float& multiplier);
+	void handleBoss(Player& player, sf::RenderWindow& window, Interface& interface, sf::RectangleShape attackHitbox, float& deltaTime, float& multiplier, sf::Sound& playerHitSound);
 
 	void drawBoss(sf::RenderWindow& window, Interface& interface, Player& player)
 	{
@@ -29,6 +29,8 @@ public:
 				window.draw(attackWave);
 		}
 	}
+
+	// Jednoduche funkce se pro prehlednost nachazi v hlavickovem .h souboru
 
 	void move(sf::Vector2f distance)
 	{
@@ -97,13 +99,13 @@ public:
 
 	bool checkPlayerWaveAttackCollision(Player& player, sf::Sprite attackWave);
 
-	void handlePlayerCollision(Player& player, Interface& interface, sf::RenderWindow& window);
+	void handlePlayerCollision(Player& player, Interface& interface, sf::RenderWindow& window, sf::Sound& playerHitSound);
 
 	void handlePlayerAttackCollision(Player& player, Interface& interface, sf::RenderWindow& window, sf::RectangleShape attackHitbox);
 
 	void handleTimedAttacks(Player& player, Interface& interface, float& deltaTime, float& multiplier);
 
-	void handlePlayerWaveAttackCollision(Player& player, Interface& interface, sf::RenderWindow& window, sf::Sprite attackWave);
+	void handlePlayerWaveAttackCollision(Player& player, Interface& interface, sf::RenderWindow& window, sf::Sprite attackWave, sf::Sound& playerHitSound);
 
 	sf::FloatRect getBounds();
 
@@ -113,6 +115,7 @@ private:
 	bool enteredBossfight = false;
 	bool entered = false;
 	bool attackWaveDraw = false;
+	bool startDeathTimer = false;
 
 	// Sprite bosse
 	sf::RectangleShape boss;
@@ -124,6 +127,7 @@ private:
 	// Hodiny na casovani 'spadnuti' nepritele do areny a casovac utoku bosse
 	sf::Clock entranceTimer;
 	sf::Clock attacksTimer;
+	sf::Clock deathTimer;
 
 	// Textury bosse a jeho utoku
 	sf::Texture boss_right;
@@ -136,6 +140,7 @@ private:
 	sf::Texture boss_attack1_charge_left;
 	sf::Texture boss_attack2_wave_right;
 	sf::Texture boss_attack2_wave_left;
+	sf::Texture boss_downed;
 	sf::Texture boss_death;
 	sf::Sprite attackWave;
 

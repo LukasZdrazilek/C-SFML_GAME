@@ -18,6 +18,8 @@ public:
 
 	void healing(Player& player);
 
+	void handleNpc(Player& player);
+
 	bool isPlayerAlive(Player& player);
 
 	int hitPoints = 3;
@@ -39,17 +41,28 @@ private:
 	bool learnedHealing = false;
 	bool learnedShifting = false;
 	bool enteredBossfight = false;
+	bool npcTextTimerStart = true;
+	bool drawNpcText = false;
+	bool bossDeathTextTimerStart = false;
 
 	// Promenne pro healovani
 	sf::Clock healingTimer;
+	sf::Clock npcAnimationTimer;
+	sf::Clock npcTextTimer;
+
 	bool cKeyPressed = false;
 	const sf::Time holdDuration = sf::seconds(1.0f);
 
+	sf::Clock bossDeathTextTimer;
+
 	// Textury HP a pozadi healing baru
 	sf::Texture hitpointTexture;
+	sf::Texture npcTexture1;
+	sf::Texture npcTexture2;
 	sf::Sprite hitPoint1;
 	sf::Sprite hitPoint2;
 	sf::Sprite hitPoint3;
+	sf::Sprite npc;
 	sf::RectangleShape healthBackground;
 	sf::RectangleShape bossHealthBackground;
 
@@ -62,6 +75,8 @@ private:
 	sf::Text bossHealthBarText;
 	sf::Text bossNameText;
 	sf::Text endingText;
+	sf::Text npcText;
+	sf::Text bossDeathText;
 
 	// Vektory na HP a body v healing baru
 	std::vector<sf::Sprite> HP;

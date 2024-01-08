@@ -17,6 +17,8 @@ public:
 	void handleEnemy(float deltaTime, Player& player, sf::RenderWindow& window, const sf::Texture& leftTexture1, const sf::Texture& rightTexture1, const sf::Texture& leftTexture2,
 		const sf::Texture& rightTexture2, const sf::Texture& leftTexture3, const sf::Texture& rightTexture3, const sf::Texture& leftTexture4, const sf::Texture& rightTexture4);
 
+	// Jednoduche funkce se pro prehlednost nachazi v hlavickovem .h souboru
+
 	void drawEnemy(sf::RenderWindow& window)
 	{
 		window.draw(enemy);
@@ -70,19 +72,14 @@ public:
 			return false;
 	}
 
-	/*void loadSound()
-	{
-		hitSoundBuffer.loadFromFile("Hit.wav");
-		hitSound.setBuffer(hitSoundBuffer);
-	}*/
 
 	bool checkPlayerCollision(Player& player);
 
 	bool checkPlayerAttackCollision(Player& player, sf::RectangleShape attackHitbox);
 
-	void handlePlayerCollision(Player& player, Interface& interface, sf::RenderWindow& window);
+	void handlePlayerCollision(Player& player, Interface& interface, sf::RenderWindow& window, sf::Sound& playerHitSound);
 
-	void handlePlayerAttackCollision(Player& player, Interface& interface, sf::RenderWindow& window, sf::RectangleShape attackHitbox);
+	void handlePlayerAttackCollision(Player& player, Interface& interface, sf::RenderWindow& window, sf::RectangleShape attackHitbox, sf::Sound& enemyHitSound);
 
 	// Funkce na kolize nepritele
 	sf::FloatRect getGlobalBounds()
@@ -92,6 +89,7 @@ public:
 		return sf::FloatRect(position, size);
 	}
 
+	// Enemy HP
 	int hitPoints = 3;
 
 	// Casovace pro pohyb nepratel a booly na pohyb vlevo/vpravo nahoru/dolu
@@ -110,9 +108,7 @@ private:
 
 	// Sprite nepritele
 	sf::RectangleShape enemy;
-
-	//sf::Clock clock;
-	// 
+ 
 	// Casovac animace pohybu a jeji rychlost
 	sf::Clock runTimer;
 	float run_animationTime = 0.3f;
@@ -134,7 +130,7 @@ public:
 
 	void loadTextures();
 
-	void handleEnemies(float deltaTime, Player& player, sf::RenderWindow& window, Interface& interface, sf::RectangleShape attackHitbox);
+	void handleEnemies(float deltaTime, Player& player, sf::RenderWindow& window, Interface& interface, sf::RectangleShape attackHitbox, sf::Sound& enemyHitSound, sf::Sound& playerHitSound);
 
 	void drawEnemies(sf::RenderWindow& window);
 
